@@ -1,0 +1,25 @@
+bundle:
+  name: patchit-dq-demo
+
+include:
+  - resources/*.yml
+
+sync:
+  include:
+    - notebooks/**
+
+variables:
+  catalog:
+    description: Unity Catalog catalog for demo tables
+    default: patchit
+  schema:
+    description: Unity Catalog schema for demo tables
+    default: dq
+  cluster_id:
+    description: Existing all-purpose cluster id for jobs
+
+targets:
+  dev:
+    mode: development
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/patchit-dq-demo

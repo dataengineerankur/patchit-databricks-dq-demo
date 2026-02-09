@@ -1,0 +1,235 @@
+resources:
+  jobs:
+    retail_orders_pipeline:
+      name: patchit-retail-orders
+      tags:
+        demo: patchit
+        domain: retail
+      tasks:
+        - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_ingest
+            base_parameters:
+              pipeline_id: retail_orders
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              row_count: "5000"
+              fail_mode: schema_drift_order_ts
+        - task_key: transform
+          depends_on:
+            - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_transform
+            base_parameters:
+              pipeline_id: retail_orders
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: schema_drift_order_ts
+        - task_key: quality_publish
+          depends_on:
+            - task_key: transform
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_quality_publish
+            base_parameters:
+              pipeline_id: retail_orders
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: schema_drift_order_ts
+
+    payments_recon_pipeline:
+      name: patchit-payments-recon
+      tags:
+        demo: patchit
+        domain: payments
+      tasks:
+        - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_ingest
+            base_parameters:
+              pipeline_id: payments_recon
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              row_count: "4000"
+              fail_mode: duplicate_txn_id
+        - task_key: transform
+          depends_on:
+            - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_transform
+            base_parameters:
+              pipeline_id: payments_recon
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: duplicate_txn_id
+        - task_key: quality_publish
+          depends_on:
+            - task_key: transform
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_quality_publish
+            base_parameters:
+              pipeline_id: payments_recon
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: duplicate_txn_id
+
+    inventory_snapshot_pipeline:
+      name: patchit-inventory-snapshot
+      tags:
+        demo: patchit
+        domain: inventory
+      tasks:
+        - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_ingest
+            base_parameters:
+              pipeline_id: inventory_snapshot
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              row_count: "3000"
+              fail_mode: negative_on_hand
+        - task_key: transform
+          depends_on:
+            - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_transform
+            base_parameters:
+              pipeline_id: inventory_snapshot
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: negative_on_hand
+        - task_key: quality_publish
+          depends_on:
+            - task_key: transform
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_quality_publish
+            base_parameters:
+              pipeline_id: inventory_snapshot
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: negative_on_hand
+
+    customer_360_pipeline:
+      name: patchit-customer-360
+      tags:
+        demo: patchit
+        domain: customer
+      tasks:
+        - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_ingest
+            base_parameters:
+              pipeline_id: customer_360
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              row_count: "3500"
+              fail_mode: missing_email
+        - task_key: transform
+          depends_on:
+            - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_transform
+            base_parameters:
+              pipeline_id: customer_360
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: missing_email
+        - task_key: quality_publish
+          depends_on:
+            - task_key: transform
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_quality_publish
+            base_parameters:
+              pipeline_id: customer_360
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: missing_email
+
+    clickstream_sessions_pipeline:
+      name: patchit-clickstream-sessions
+      tags:
+        demo: patchit
+        domain: clickstream
+      tasks:
+        - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_ingest
+            base_parameters:
+              pipeline_id: clickstream_sessions
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              row_count: "6000"
+              fail_mode: invalid_event_ts
+        - task_key: transform
+          depends_on:
+            - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_transform
+            base_parameters:
+              pipeline_id: clickstream_sessions
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: invalid_event_ts
+        - task_key: quality_publish
+          depends_on:
+            - task_key: transform
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_quality_publish
+            base_parameters:
+              pipeline_id: clickstream_sessions
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: invalid_event_ts
+
+    finance_close_pipeline:
+      name: patchit-finance-close
+      tags:
+        demo: patchit
+        domain: finance
+      tasks:
+        - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_ingest
+            base_parameters:
+              pipeline_id: finance_close
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              row_count: "2500"
+              fail_mode: missing_fx_rate
+        - task_key: transform
+          depends_on:
+            - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_transform
+            base_parameters:
+              pipeline_id: finance_close
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: missing_fx_rate
+        - task_key: quality_publish
+          depends_on:
+            - task_key: transform
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_quality_publish
+            base_parameters:
+              pipeline_id: finance_close
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: missing_fx_rate
