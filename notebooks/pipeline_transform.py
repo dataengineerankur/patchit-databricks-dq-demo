@@ -58,6 +58,7 @@ def transform_inventory(df):
 
 
 def transform_customer(df):
+    df = ensure_column(df, "customer_id", F.lit(None).cast("string"))
     df = ensure_column(df, "email", F.lit(None).cast("string"))
     df = df.withColumn("email", F.lower("email"))
     df = df.withColumn("email_domain", F.split(F.col("email"), "@").getItem(1))
