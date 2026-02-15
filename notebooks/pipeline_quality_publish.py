@@ -67,6 +67,10 @@ elif pipeline_id == "finance_close":
     missing_fx = silver_df.filter(F.col("amount_usd").isNull()).count()
     fail_if(missing_fx, "Missing FX rates for currency conversion")
 
+elif pipeline_id == "ping":
+    # Health check pipeline - no specific quality validations required
+    pass
+
 else:
     raise ValueError(f"Unsupported pipeline_id: {pipeline_id}")
 
