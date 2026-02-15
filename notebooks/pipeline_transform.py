@@ -53,6 +53,7 @@ def transform_payments(df):
 
 def transform_inventory(df):
     df = df.withColumn("on_hand", F.col("on_hand").cast("int"))
+    df = df.withColumn("on_hand", F.when(F.col("on_hand") < 0, 0).otherwise(F.col("on_hand")))
     df = df.withColumn("is_low_stock", F.col("on_hand") < F.lit(10))
     return df
 
