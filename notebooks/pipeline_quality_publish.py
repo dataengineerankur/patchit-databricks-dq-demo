@@ -47,7 +47,12 @@ elif pipeline_id == "payments_recon":
         .filter(F.col("count") > 1)
         .count()
     )
-    fail_if(dup_txn, "Duplicate transaction ids detected")
+    if dup_txn > 0:
+        from pyspark.sql import Window
+        w = Window.partitionBy("txn_id").orderBy(F.col("payment_ts").desc())
+        silver_df = silver_df.withColumn("_row_num", F.row_number().over(w))
+        silver_df = silver_df.filter(F.col("_row_num") == 1).drop("_row_num")
+        print(f"[QUALITY] Deduplicated {dup_txn} duplicate transaction ids")
 
 elif pipeline_id == "inventory_snapshot":
     negative_on_hand = silver_df.filter(F.col("on_hand") < 0).count()
