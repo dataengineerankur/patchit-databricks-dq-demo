@@ -34,7 +34,11 @@ def ensure_column(df, col_name, default_expr):
 
 
 def transform_retail(df):
-    df = ensure_column(df, "order_ts", F.lit(None).cast("timestamp"))
+    if "order_ts" not in df.columns:
+        if "order_time" in df.columns:
+            df = df.withColumn("order_ts", F.col("order_time"))
+        else:
+            df = df.withColumn("order_ts", F.current_timestamp())
     df = df.withColumn("order_date", F.to_date("order_ts"))
     df = df.withColumn(
         "amount_usd",
