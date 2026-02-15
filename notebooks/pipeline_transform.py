@@ -82,6 +82,7 @@ def transform_finance(df):
         [
             ("USD", 1.0),
             ("EUR", 1.1),
+            ("GBP", 1.3),
             ("JPY", 0.009),
         ],
         ["currency", "fx_rate"],
