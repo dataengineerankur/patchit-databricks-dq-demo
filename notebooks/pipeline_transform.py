@@ -34,6 +34,10 @@ def ensure_column(df, col_name, default_expr):
 
 
 def transform_retail(df):
+    if "currency" not in df.columns and "ccy_code" in df.columns:
+        df = df.withColumn("currency", F.col("ccy_code"))
+    if "sku" not in df.columns and "item_sku" in df.columns:
+        df = df.withColumn("sku", F.col("item_sku"))
     df = ensure_column(df, "order_ts", F.lit(None).cast("timestamp"))
     df = df.withColumn("order_date", F.to_date("order_ts"))
     df = df.withColumn(
@@ -46,6 +50,7 @@ def transform_retail(df):
 
 
 def transform_payments(df):
+    df = ensure_column(df, "customer_id", F.lit(None).cast("string"))
     df = df.withColumn("payment_ts", F.to_timestamp("payment_ts"))
     df = df.withColumn("is_failed", F.col("status") == F.lit("DECLINED"))
     return df
@@ -58,6 +63,7 @@ def transform_inventory(df):
 
 
 def transform_customer(df):
+    df = ensure_column(df, "customer_id", F.lit(None).cast("string"))
     df = ensure_column(df, "email", F.lit(None).cast("string"))
     df = df.withColumn("email", F.lower("email"))
     df = df.withColumn("email_domain", F.split(F.col("email"), "@").getItem(1))
