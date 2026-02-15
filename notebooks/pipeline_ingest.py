@@ -35,6 +35,7 @@ def generate_retail_orders(n: int, fail_mode: str):
         spark.range(0, n)
         .withColumn("order_id", F.concat(F.lit("O"), F.lpad(F.col("id").cast("string"), 8, "0")))
         .withColumn("customer_id", F.concat(F.lit("C"), F.lpad((F.col("id") % 1000).cast("string"), 6, "0")))
+        .withColumn("sku", F.concat(F.lit("SKU-"), F.lpad((F.col("id") % 500).cast("string"), 5, "0")))
         .withColumn("amount", F.round(F.rand(42) * 200 + 5, 2))
         .withColumn(
             "currency",
@@ -52,6 +53,8 @@ def generate_retail_orders(n: int, fail_mode: str):
     )
     if fail_mode == "schema_drift_order_ts":
         df = df.withColumnRenamed("order_ts", "order_time")
+    elif fail_mode == "complex_margin_order_contract_drift":
+        df = df.withColumnRenamed("sku", "item_sku").withColumnRenamed("currency", "ccy_code")
     return df
 
 
@@ -60,6 +63,7 @@ def generate_payments(n: int, fail_mode: str):
         spark.range(0, n)
         .withColumn("txn_id", F.concat(F.lit("T"), F.lpad(F.col("id").cast("string"), 8, "0")))
         .withColumn("order_id", F.concat(F.lit("O"), F.lpad((F.col("id") % 2000).cast("string"), 8, "0")))
+        .withColumn("customer_id", F.concat(F.lit("C"), F.lpad((F.col("id") % 1000).cast("string"), 6, "0")))
         .withColumn("amount", F.round(F.rand(7) * 200 + 3, 2))
         .withColumn("payment_ts", F.current_timestamp())
         .withColumn(
@@ -79,6 +83,14 @@ def generate_payments(n: int, fail_mode: str):
             "txn_id",
             F.when(F.col("order_id") == "O00000000", F.lit("DUP-0001")).otherwise(F.col("txn_id")),
         )
+    elif fail_mode == "complex_risk_orphan_payments":
+        df = df.withColumn(
+            "customer_id",
+            F.when(F.col("txn_id").endswith("7"), F.lit("C999999")).otherwise(F.col("customer_id")),
+        ).withColumn(
+            "order_id",
+            F.when(F.col("txn_id").endswith("9"), F.lit("O99999999")).otherwise(F.col("order_id")),
+        )
     return df
 
 
@@ -94,6 +106,11 @@ def generate_inventory(n: int, fail_mode: str):
     if fail_mode == "negative_on_hand":
         df = df.withColumn(
             "on_hand", F.when(F.col("sku") == "SKU-00000", F.lit(-5)).otherwise(F.col("on_hand"))
+        )
+    elif fail_mode == "complex_margin_bad_sku":
+        df = df.withColumn(
+            "sku",
+            F.when(F.col("sku").endswith("7"), F.lower(F.col("sku"))).otherwise(F.col("sku")),
         )
     return df
 
@@ -115,6 +132,26 @@ def generate_customer(n: int, fail_mode: str):
     )
     if fail_mode == "missing_email":
         df = df.withColumnRenamed("email", "contact_email")
+    elif fail_mode == "complex_risk_customer_key_drift":
+        df = df.withColumnRenamed("customer_id", "cust_id")
+    return df
+
+
+def generate_customer_ingest(n: int, fail_mode: str):
+    df = (
+        spark.range(0, n)
+        .withColumn("customer_id", F.concat(F.lit("C"), F.lpad(F.col("id").cast("string"), 6, "0")))
+        .withColumn("contact_email", F.concat(F.lit("user"), F.col("id"), F.lit("@example.com")))
+        .withColumn("signup_ts", F.current_timestamp())
+        .withColumn(
+            "region",
+            F.when(F.col("id") % 4 == 0, F.lit("NA"))
+            .when(F.col("id") % 4 == 1, F.lit("EMEA"))
+            .when(F.col("id") % 4 == 2, F.lit("APAC"))
+            .otherwise(F.lit("LATAM")),
+        )
+        .drop("id")
+    )
     return df
 
 
@@ -139,6 +176,11 @@ def generate_clickstream(n: int, fail_mode: str):
             "event_ts",
             F.when(F.col("event_id") == "E00000000", F.lit("2025-99-99 25:61:00")).otherwise(F.col("event_ts")),
         )
+    elif fail_mode == "complex_risk_user_key_drift":
+        df = df.withColumn(
+            "user_id",
+            F.when(F.col("event_id").endswith("7"), F.concat(F.lit("anon-"), F.col("user_id"))).otherwise(F.col("user_id")),
+        )
     return df
 
 
@@ -162,6 +204,11 @@ def generate_finance(n: int, fail_mode: str):
             "currency",
             F.when(F.col("ledger_id") == "L00000000", F.lit("ZZZ")).otherwise(F.col("currency")),
         )
+    elif fail_mode == "complex_margin_missing_fx":
+        df = df.withColumn(
+            "currency",
+            F.when(F.col("ledger_id").endswith("9"), F.lit("ZZZ")).otherwise(F.col("currency")),
+        )
     return df
 
 
@@ -174,6 +221,8 @@ elif pipeline_id == "inventory_snapshot":
     raw_df = generate_inventory(row_count, fail_mode)
 elif pipeline_id == "customer_360":
     raw_df = generate_customer(row_count, fail_mode)
+elif pipeline_id == "customer_ingest":
+    raw_df = generate_customer_ingest(row_count, fail_mode)
 elif pipeline_id == "clickstream_sessions":
     raw_df = generate_clickstream(row_count, fail_mode)
 elif pipeline_id == "finance_close":
@@ -182,4 +231,4 @@ else:
     raise ValueError(f"Unsupported pipeline_id: {pipeline_id}")
 
 print(f"[INGEST] Writing raw table: {raw_table}")
-raw_df.write.format("delta").mode("overwrite").saveAsTable(raw_table)
+raw_df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable(raw_table)
