@@ -29,6 +29,13 @@ PIPELINES = {
         "gold_table": "customer_gold",
         "fail_mode": "missing_email",
     },
+    "customer_ingest": {
+        "description": "Customer ingest for complex customer risk chain",
+        "raw_table": "customer_raw",
+        "silver_table": "customer_silver",
+        "gold_table": "customer_gold",
+        "fail_mode": "",
+    },
     "clickstream_sessions": {
         "description": "Clickstream sessionization",
         "raw_table": "clickstream_raw",
