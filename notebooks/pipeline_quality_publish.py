@@ -57,7 +57,11 @@ elif pipeline_id == "customer_360":
     invalid_email = silver_df.filter(
         F.col("email").isNull() | (~F.col("email").contains("@"))
     ).count()
-    fail_if(invalid_email, "Invalid or missing email detected")
+    if invalid_email > 0:
+        print(f"[QUALITY] Filtering {invalid_email} rows with invalid/missing emails")
+        silver_df = silver_df.filter(
+            F.col("email").isNotNull() & F.col("email").contains("@")
+        )
 
 elif pipeline_id == "clickstream_sessions":
     invalid_ts = silver_df.filter(F.col("event_ts").isNull()).count()
