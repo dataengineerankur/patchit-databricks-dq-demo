@@ -38,8 +38,8 @@ def transform_retail(df):
     df = df.withColumn("order_date", F.to_date("order_ts"))
     df = df.withColumn(
         "amount_usd",
-        F.when(F.col("currency") == "EUR", F.col("amount") * F.lit(1.1))
-        .when(F.col("currency") == "GBP", F.col("amount") * F.lit(1.3))
+        F.when(F.col("ccy_code") == "EUR", F.col("amount") * F.lit(1.1))
+        .when(F.col("ccy_code") == "GBP", F.col("amount") * F.lit(1.3))
         .otherwise(F.col("amount")),
     )
     return df
@@ -110,4 +110,4 @@ else:
     raise ValueError(f"Unsupported pipeline_id: {pipeline_id}")
 
 print(f"[TRANSFORM] Writing silver table: {silver_table}")
-silver_df.write.format("delta").mode("overwrite").saveAsTable(silver_table)
+silver_df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable(silver_table)
