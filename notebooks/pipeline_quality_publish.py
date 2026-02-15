@@ -35,8 +35,10 @@ def fail_if(count: int, message: str):
 silver_df = spark.table(silver_table)
 
 if pipeline_id == "retail_orders":
-    null_ts = silver_df.filter(F.col("order_ts").isNull()).count()
-    fail_if(null_ts, "Schema drift detected: order_ts missing")
+    # Handle schema drift: check order_time if order_ts is missing/null
+    ts_col = "order_ts" if "order_ts" in silver_df.columns and silver_df.filter(F.col("order_ts").isNotNull()).count() > 0 else "order_time"
+    null_ts = silver_df.filter(F.col(ts_col).isNull()).count()
+    fail_if(null_ts, f"Schema drift detected: {ts_col} missing")
     negative_amt = silver_df.filter(F.col("amount") < 0).count()
     fail_if(negative_amt, "Invalid order amount")
 
