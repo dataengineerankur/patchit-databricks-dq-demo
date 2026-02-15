@@ -34,6 +34,9 @@ def ensure_column(df, col_name, default_expr):
 
 
 def transform_retail(df):
+    # Handle schema drift: if order_time exists, rename it back to order_ts
+    if "order_time" in df.columns and "order_ts" not in df.columns:
+        df = df.withColumnRenamed("order_time", "order_ts")
     df = ensure_column(df, "order_ts", F.lit(None).cast("timestamp"))
     df = df.withColumn("order_date", F.to_date("order_ts"))
     df = df.withColumn(
