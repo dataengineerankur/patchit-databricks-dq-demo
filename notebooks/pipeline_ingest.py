@@ -182,4 +182,4 @@ else:
     raise ValueError(f"Unsupported pipeline_id: {pipeline_id}")
 
 print(f"[INGEST] Writing raw table: {raw_table}")
-raw_df.write.format("delta").mode("overwrite").saveAsTable(raw_table)
+raw_df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable(raw_table)
