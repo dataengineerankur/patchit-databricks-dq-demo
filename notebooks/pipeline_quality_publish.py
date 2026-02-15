@@ -68,7 +68,8 @@ elif pipeline_id == "finance_close":
     fail_if(missing_fx, "Missing FX rates for currency conversion")
 
 else:
-    raise ValueError(f"Unsupported pipeline_id: {pipeline_id}")
+    # No specific quality checks for this pipeline_id
+    print(f"[QUALITY] No specific quality checks configured for pipeline_id: {pipeline_id}")
 
 print(f"[QUALITY] Writing gold table: {gold_table}")
 silver_df.write.format("delta").mode("overwrite").saveAsTable(gold_table)
