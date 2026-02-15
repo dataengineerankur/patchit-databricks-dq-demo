@@ -41,7 +41,7 @@ if missing_customers or missing_payments or missing_clickstream:
                 customers = customers.withColumn(col, F.lit(None).cast("string"))
     if missing_payments:
         for col in missing_payments:
-            customers = customers.withColumn(col, F.lit(None).cast("string"))
+            payments = payments.withColumn(col, F.lit(None).cast("string"))
     if missing_clickstream:
         for col in missing_clickstream:
             clickstream = clickstream.withColumn(col, F.lit(None).cast("string"))
