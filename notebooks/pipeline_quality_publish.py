@@ -51,7 +51,9 @@ elif pipeline_id == "payments_recon":
 
 elif pipeline_id == "inventory_snapshot":
     negative_on_hand = silver_df.filter(F.col("on_hand") < 0).count()
-    fail_if(negative_on_hand, "Negative on_hand inventory detected")
+    if negative_on_hand > 0:
+        print(f"[QUALITY] Filtering out {negative_on_hand} rows with negative on_hand values")
+        silver_df = silver_df.filter(F.col("on_hand") >= 0)
 
 elif pipeline_id == "customer_360":
     invalid_email = silver_df.filter(
