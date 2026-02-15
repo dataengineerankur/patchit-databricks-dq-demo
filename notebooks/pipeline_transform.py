@@ -59,6 +59,19 @@ def transform_inventory(df):
 
 def transform_customer(df):
     df = ensure_column(df, "email", F.lit(None).cast("string"))
+    # Ensure customer_id exists - generate from email hash if missing
+    if "customer_id" not in df.columns:
+        df = df.withColumn(
+            "customer_id",
+            F.concat(
+                F.lit("C"),
+                F.lpad(
+                    F.abs(F.hash(F.col("email"))).cast("string"),
+                    6,
+                    "0"
+                ).substr(1, 6)
+            )
+        )
     df = df.withColumn("email", F.lower("email"))
     df = df.withColumn("email_domain", F.split(F.col("email"), "@").getItem(1))
     return df
