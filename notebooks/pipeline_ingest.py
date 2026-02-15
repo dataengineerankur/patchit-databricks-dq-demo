@@ -118,6 +118,24 @@ def generate_customer(n: int, fail_mode: str):
     return df
 
 
+def generate_customer_ingest(n: int, fail_mode: str):
+    df = (
+        spark.range(0, n)
+        .withColumn("customer_id", F.concat(F.lit("C"), F.lpad(F.col("id").cast("string"), 6, "0")))
+        .withColumn("contact_email", F.concat(F.lit("user"), F.col("id"), F.lit("@example.com")))
+        .withColumn("signup_ts", F.current_timestamp())
+        .withColumn(
+            "region",
+            F.when(F.col("id") % 4 == 0, F.lit("NA"))
+            .when(F.col("id") % 4 == 1, F.lit("EMEA"))
+            .when(F.col("id") % 4 == 2, F.lit("APAC"))
+            .otherwise(F.lit("LATAM")),
+        )
+        .drop("id")
+    )
+    return df
+
+
 def generate_clickstream(n: int, fail_mode: str):
     df = (
         spark.range(0, n)
@@ -174,6 +192,8 @@ elif pipeline_id == "inventory_snapshot":
     raw_df = generate_inventory(row_count, fail_mode)
 elif pipeline_id == "customer_360":
     raw_df = generate_customer(row_count, fail_mode)
+elif pipeline_id == "customer_ingest":
+    raw_df = generate_customer_ingest(row_count, fail_mode)
 elif pipeline_id == "clickstream_sessions":
     raw_df = generate_clickstream(row_count, fail_mode)
 elif pipeline_id == "finance_close":
