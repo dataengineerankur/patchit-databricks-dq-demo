@@ -35,6 +35,7 @@ def generate_retail_orders(n: int, fail_mode: str):
         spark.range(0, n)
         .withColumn("order_id", F.concat(F.lit("O"), F.lpad(F.col("id").cast("string"), 8, "0")))
         .withColumn("customer_id", F.concat(F.lit("C"), F.lpad((F.col("id") % 1000).cast("string"), 6, "0")))
+        .withColumn("sku", F.concat(F.lit("SKU-"), F.lpad((F.col("id") % 500).cast("string"), 5, "0")))
         .withColumn("amount", F.round(F.rand(42) * 200 + 5, 2))
         .withColumn(
             "currency",
