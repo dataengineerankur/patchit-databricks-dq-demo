@@ -38,8 +38,8 @@ def transform_retail(df):
     df = df.withColumn("order_date", F.to_date("order_ts"))
     df = df.withColumn(
         "amount_usd",
-        F.when(F.col("currency") == "EUR", F.col("amount") * F.lit(1.1))
-        .when(F.col("currency") == "GBP", F.col("amount") * F.lit(1.3))
+        F.when(F.col("ccy_code") == "EUR", F.col("amount") * F.lit(1.1))
+        .when(F.col("ccy_code") == "GBP", F.col("amount") * F.lit(1.3))
         .otherwise(F.col("amount")),
     )
     return df
