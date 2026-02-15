@@ -66,6 +66,7 @@ def transform_customer(df):
 
 def transform_clickstream(df):
     df = df.withColumn("event_ts", F.to_timestamp("event_ts", "yyyy-MM-dd HH:mm:ss"))
+    df = df.filter(F.col("event_ts").isNotNull())
     w = Window.partitionBy("user_id").orderBy("event_ts")
     df = df.withColumn("prev_ts", F.lag("event_ts").over(w))
     df = df.withColumn(
