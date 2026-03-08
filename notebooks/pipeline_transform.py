@@ -87,6 +87,7 @@ def transform_finance(df):
         ["currency", "fx_rate"],
     )
     df = df.join(fx_rates, on="currency", how="left")
+    df = df.withColumn("fx_rate", F.coalesce(F.col("fx_rate"), F.lit(1.0)))
     df = df.withColumn("amount_usd", F.col("amount_local") * F.col("fx_rate"))
     return df
 
