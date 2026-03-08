@@ -165,6 +165,27 @@ def generate_finance(n: int, fail_mode: str):
     return df
 
 
+def generate_af001_data(n: int, fail_mode: str):
+    df = (
+        spark.range(0, n)
+        .withColumn("record_id", F.concat(F.lit("R"), F.lpad(F.col("id").cast("string"), 8, "0")))
+        .withColumn("entity_id", F.concat(F.lit("E"), F.lpad((F.col("id") % 100).cast("string"), 4, "0")))
+        .withColumn("value", F.round(F.rand(99) * 1000, 2))
+        .withColumn("created_at", F.current_timestamp())
+        .drop("id")
+    )
+    if fail_mode == "missing_pk":
+        df = df.withColumn(
+            "record_id",
+            F.when(F.col("entity_id") == "E0000", F.lit(None)).otherwise(F.col("record_id")),
+        )
+        df = df.withColumn(
+            "record_id",
+            F.when(F.col("entity_id") == "E0001", F.lit("R00000010")).otherwise(F.col("record_id")),
+        )
+    return df
+
+
 # COMMAND ----------
 if pipeline_id == "retail_orders":
     raw_df = generate_retail_orders(row_count, fail_mode)
@@ -178,6 +199,8 @@ elif pipeline_id == "clickstream_sessions":
     raw_df = generate_clickstream(row_count, fail_mode)
 elif pipeline_id == "finance_close":
     raw_df = generate_finance(row_count, fail_mode)
+elif pipeline_id == "patchit_airflow_issue_001":
+    raw_df = generate_af001_data(row_count, fail_mode)
 else:
     raise ValueError(f"Unsupported pipeline_id: {pipeline_id}")
 

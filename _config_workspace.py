@@ -43,6 +43,13 @@ PIPELINES = {
         "gold_table": "finance_gold",
         "fail_mode": "missing_fx_rate",
     },
+    "patchit_airflow_issue_001": {
+        "description": "AF001: Primary key validation and deduplication",
+        "raw_table": "af001_raw",
+        "silver_table": "af001_silver",
+        "gold_table": "af001_gold",
+        "fail_mode": "missing_pk",
+    },
 }
 
 

@@ -91,6 +91,14 @@ def transform_finance(df):
     return df
 
 
+def transform_af001(df):
+    df = df.filter(F.col("record_id").isNotNull())
+    w = Window.partitionBy("record_id").orderBy(F.col("created_at").desc())
+    df = df.withColumn("row_num", F.row_number().over(w))
+    df = df.filter(F.col("row_num") == 1).drop("row_num")
+    return df
+
+
 # COMMAND ----------
 raw_df = spark.table(raw_table)
 
@@ -106,6 +114,8 @@ elif pipeline_id == "clickstream_sessions":
     silver_df = transform_clickstream(raw_df)
 elif pipeline_id == "finance_close":
     silver_df = transform_finance(raw_df)
+elif pipeline_id == "patchit_airflow_issue_001":
+    silver_df = transform_af001(raw_df)
 else:
     raise ValueError(f"Unsupported pipeline_id: {pipeline_id}")
 

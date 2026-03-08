@@ -233,3 +233,43 @@ resources:
               catalog: ${var.catalog}
               schema: ${var.schema}
               fail_mode: missing_fx_rate
+
+    af001_primary_key_pipeline:
+      name: patchit-airflow-issue-001
+      tags:
+        demo: patchit
+        domain: data_quality
+        issue: AF001
+      tasks:
+        - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_ingest
+            base_parameters:
+              pipeline_id: patchit_airflow_issue_001
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              row_count: "3000"
+              fail_mode: missing_pk
+        - task_key: transform
+          depends_on:
+            - task_key: ingest
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_transform
+            base_parameters:
+              pipeline_id: patchit_airflow_issue_001
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: missing_pk
+        - task_key: quality_publish
+          depends_on:
+            - task_key: transform
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/pipeline_quality_publish
+            base_parameters:
+              pipeline_id: patchit_airflow_issue_001
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              fail_mode: missing_pk
