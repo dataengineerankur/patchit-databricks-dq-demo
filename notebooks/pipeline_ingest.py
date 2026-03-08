@@ -178,6 +178,8 @@ elif pipeline_id == "clickstream_sessions":
     raw_df = generate_clickstream(row_count, fail_mode)
 elif pipeline_id == "finance_close":
     raw_df = generate_finance(row_count, fail_mode)
+elif pipeline_id == "patchit_airflow_issue_002":
+    raw_df = generate_finance(row_count, fail_mode)
 else:
     raise ValueError(f"Unsupported pipeline_id: {pipeline_id}")
 
