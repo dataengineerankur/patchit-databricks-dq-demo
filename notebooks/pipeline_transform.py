@@ -106,6 +106,8 @@ elif pipeline_id == "clickstream_sessions":
     silver_df = transform_clickstream(raw_df)
 elif pipeline_id == "finance_close":
     silver_df = transform_finance(raw_df)
+elif pipeline_id == "patchit_airflow_issue_002":
+    silver_df = transform_finance(raw_df)
 else:
     raise ValueError(f"Unsupported pipeline_id: {pipeline_id}")
 

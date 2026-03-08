@@ -43,6 +43,13 @@ PIPELINES = {
         "gold_table": "finance_gold",
         "fail_mode": "missing_fx_rate",
     },
+    "patchit_airflow_issue_002": {
+        "description": "Finance close and FX normalization",
+        "raw_table": "finance_raw",
+        "silver_table": "finance_silver",
+        "gold_table": "finance_gold",
+        "fail_mode": "missing_fx_rate",
+    },
 }
 
 

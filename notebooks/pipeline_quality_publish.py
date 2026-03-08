@@ -67,6 +67,18 @@ elif pipeline_id == "finance_close":
     missing_fx = silver_df.filter(F.col("amount_usd").isNull()).count()
     fail_if(missing_fx, "Missing FX rates for currency conversion")
 
+elif pipeline_id == "patchit_airflow_issue_002":
+    total_count = silver_df.count()
+    null_count = silver_df.filter(F.col("amount_usd").isNull()).count()
+    null_ratio = null_count / total_count if total_count > 0 else 0
+    print(f"[QUALITY] Null ratio for amount_usd: {null_ratio:.2%} ({null_count}/{total_count})")
+    
+    if null_ratio > 0.5:
+        raise ValueError(f"Null ratio {null_ratio:.2%} exceeds critical threshold (50%)")
+    elif null_ratio > 0:
+        print(f"[QUALITY] Filtering {null_count} rows with null amount_usd (ratio: {null_ratio:.2%})")
+        silver_df = silver_df.filter(F.col("amount_usd").isNotNull())
+
 else:
     raise ValueError(f"Unsupported pipeline_id: {pipeline_id}")
 
